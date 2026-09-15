@@ -411,7 +411,7 @@ header {
   margin-bottom: 10px;
 }
 
-.search-card .form-input {
+.search-card {
   border: 1.5px solid #E8E2F4;
   border-radius: 12px;
   margin-bottom: 12px;
