@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>МедСити — Индекс INI (Лента)</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="mobile-container">
+    {{> header}}
+
+    <div class="feed-container">
+      <video class="feed-video" autoplay loop muted playsinline>
+        <source src="{{biochemicalIndicator.indicatorVideoUrl}}" type="video/mp4">
+      </video>
+
+      <div class="overlay"></div>
+
+      <div class="info-box">
+        <h2 class="info-title">{{biochemicalIndicator.indicatorTitle}}</h2>
+        <div class="info-range">{{biochemicalIndicator.indicatorName}}: {{biochemicalIndicator.lowerReferenceLimit}}-{{biochemicalIndicator.upperReferenceLimit}} {{biochemicalIndicator.measurementUnit}}</div>
+        <p class="info-desc">{{biochemicalIndicator.clinicalDescription}}</p>
+      </div>
+
+      <div class="actions">
+        <div class="action-item">
+          <button class="action-btn">
+            <img src="/images/heart.svg" alt="Сердце">
+          </button>
+          <span class="likes-count">{{biochemicalIndicator.likesCount}}</span>
+        </div>
+
+        <a href="/feed?indicatorId={{biochemicalIndicator.indicatorId}}&next=true" class="action-btn">
+          <img src="/images/next.svg" alt="Следующий">
+        </a>
+      </div>
+    </div>
+
+    {{> bottom_nav}}
+  </div>
+</body>
+</html>
