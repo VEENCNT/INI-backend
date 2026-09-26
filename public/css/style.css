@@ -231,6 +231,7 @@ header {
 }
 
 .expand-toggle-checkbox:checked ~ .info-desc {
+  line-clamp: unset;
   -webkit-line-clamp: unset;
   display: block; 
   overflow: visible;
@@ -247,6 +248,7 @@ header {
   color: rgba(255, 255, 255, 0.95);
 
   display: -webkit-box;
+  line-clamp: 1;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
