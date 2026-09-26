@@ -5,115 +5,97 @@ const MINIO_BASE_URL = 'http://localhost:9000/media';
 export interface BiochemicalIndicator {
   indicatorId: number;
   indicatorTitle: string;
-  clinicalDescription: string;
-  indicatorName: string;
-  measurementUnit: string;
+  indicatorDescription: string;
   lowerReferenceLimit: number;
   upperReferenceLimit: number;
-  imageKey: string;
-  videoKey: string;
-  registrationDate: string;
+  imageUrl: string;
+  videoUrl: string;
   patientLikeUserIds: number[];
 }
 
 @Injectable()
 export class BiochemicalIndicatorService {
-  private readonly biochemicalIndicatorsCollection: BiochemicalIndicator[] = [
+  private readonly biochemicalIndicators: BiochemicalIndicator[] = [
     {
       indicatorId: 1,
       indicatorTitle: 'Крайне низкий Альбумин',
-      clinicalDescription: 'Серьезный дефицит основного белка крови.',
-      indicatorName: 'Альбумин',
-      measurementUnit: 'г/л',
+      indicatorDescription: 'Серьезный дефицит основного белка крови.',
       lowerReferenceLimit: 0,
       upperReferenceLimit: 25,
-      imageKey: 'albumin.png',
-      videoKey: 'albumin.mp4',
-      registrationDate: '2026-01-15',
-      patientLikeUserIds: Array.from({ length: 2931 }, (_, i) => i + 1),
+      imageUrl: `${MINIO_BASE_URL}/albumin.png`,
+      videoUrl: `${MINIO_BASE_URL}/albumin.mp4`,
+      patientLikeUserIds: [1, 2, 3, 4, 5, 6, 7],
     },
     {
       indicatorId: 2,
       indicatorTitle: 'Низкое число Лимфоцитов',
-      clinicalDescription: 'Снижение уровня лимфоцитов, указывающее на иммунодефицит и нутритивный риск.',
-      indicatorName: 'Лимфоциты',
-      measurementUnit: 'кл/мкл',
+      indicatorDescription: 'Снижение уровня лимфоцитов, указывающее на иммунодефицит и нутритивный риск.',
       lowerReferenceLimit: 800,
       upperReferenceLimit: 1200,
-      imageKey: 'lymphocytes.png',
-      videoKey: 'lymphocytes.mp4',
-      registrationDate: '2026-02-01',
-      patientLikeUserIds: Array.from({ length: 1230 }, (_, i) => i + 1),
+      imageUrl: `${MINIO_BASE_URL}/lymphocytes.png`,
+      videoUrl: `${MINIO_BASE_URL}/lymphocytes.mp4`,
+      patientLikeUserIds: [8, 9, 10, 11],
     },
     {
       indicatorId: 3,
       indicatorTitle: 'Нормальный Альбумин',
-      clinicalDescription: 'Оптимальный уровень сывороточного альбумина.',
-      indicatorName: 'Альбумин',
-      measurementUnit: 'г/л',
+      indicatorDescription: 'Оптимальный уровень сывороточного альбумина.',
       lowerReferenceLimit: 35,
       upperReferenceLimit: 50,
-      imageKey: 'albumin.png',
-      videoKey: 'albumin.mp4',
-      registrationDate: '2026-01-16',
-      patientLikeUserIds: Array.from({ length: 1830 }, (_, i) => i + 1),
+      imageUrl: `${MINIO_BASE_URL}/albumin.png`,
+      videoUrl: `${MINIO_BASE_URL}/albumin.mp4`,
+      patientLikeUserIds: [12, 13, 14, 15, 16],
     },
     {
       indicatorId: 4,
       indicatorTitle: 'Нормальный Холестерин',
-      clinicalDescription: 'Уровень общего холестерина в норме для расчета INI.',
-      indicatorName: 'Холестерин',
-      measurementUnit: 'ммоль/л',
+      indicatorDescription: 'Уровень общего холестерина в норме для расчета INI.',
       lowerReferenceLimit: 4.5,
       upperReferenceLimit: 5.2,
-      imageKey: 'cholesterol.png',
-      videoKey: 'cholesterol.mp4',
-      registrationDate: '2026-02-10',
-      patientLikeUserIds: Array.from({ length: 1830 }, (_, i) => i + 1),
+      imageUrl: `${MINIO_BASE_URL}/cholesterol.png`,
+      videoUrl: `${MINIO_BASE_URL}/cholesterol.mp4`,
+      patientLikeUserIds: [17, 18, 19],
     },
   ];
 
   getIndicatorFeedData(indicatorIdQuery?: string, next?: string) {
-    let index = 0;
+    let indicatorId = 0;
 
     if (indicatorIdQuery) {
       const parsedId = parseInt(indicatorIdQuery, 10);
-      const foundIdx = this.biochemicalIndicatorsCollection.findIndex(
+      const foundId = this.biochemicalIndicators.findIndex(
         (item) => item.indicatorId === parsedId,
       );
-      if (foundIdx !== -1) {
-        index = foundIdx;
+      if (foundId !== -1) {
+        indicatorId = foundId;
       }
     }
 
     if (next === 'true') {
-      index = (index + 1) % this.biochemicalIndicatorsCollection.length;
+      indicatorId = (indicatorId + 1) % this.biochemicalIndicators.length;
     }
 
-    const currentIndicator = this.biochemicalIndicatorsCollection[index];
+    const currentIndicator = this.biochemicalIndicators[indicatorId];
 
     return {
       biochemicalIndicator: {
         ...currentIndicator,
         likesCount: currentIndicator.patientLikeUserIds.length,
-        indicatorImageUrl: `${MINIO_BASE_URL}/${currentIndicator.imageKey}`,
-        indicatorVideoUrl: `${MINIO_BASE_URL}/${currentIndicator.videoKey}`,
-      },
-      activeTab: 'feed',
+      }
     };
   }
 
-  getIndicatorsGridData(bloodSubstanceConcentrationQuery?: string) {
-    let filteredIndicators = this.biochemicalIndicatorsCollection;
-    const searchConcentration = bloodSubstanceConcentrationQuery
-      ? parseFloat(bloodSubstanceConcentrationQuery)
+  getIndicatorGridData(indicatorConcentration?: string) {
+    let filteredIndicators = this.biochemicalIndicators;
+    const searchedConcentration = indicatorConcentration
+      ? parseFloat(indicatorConcentration)
       : undefined;
 
-    if (searchConcentration !== undefined && !isNaN(searchConcentration)) {
+    if (searchedConcentration !== undefined && !isNaN(searchedConcentration)) {
       filteredIndicators = filteredIndicators.filter(
         (item) =>
-          searchConcentration >= item.lowerReferenceLimit &&
-          searchConcentration <= item.upperReferenceLimit,
+          searchedConcentration >= item.lowerReferenceLimit &&
+          searchedConcentration <= item.upperReferenceLimit,
       );
     }
 
@@ -121,11 +103,8 @@ export class BiochemicalIndicatorService {
       biochemicalIndicators: filteredIndicators.map((item) => ({
         ...item,
         likesCount: item.patientLikeUserIds.length,
-        indicatorImageUrl: `${MINIO_BASE_URL}/${item.imageKey}`,
-        indicatorVideoUrl: `${MINIO_BASE_URL}/${item.videoKey}`,
       })),
-      searchedConcentrationValue: bloodSubstanceConcentrationQuery || '',
-      activeTab: 'grid',
+      searchedConcentration: indicatorConcentration || ''
     };
   }
 }

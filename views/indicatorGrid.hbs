@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>МедСити — Биохимические показатели</title>
+  <title>МедСити</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -13,11 +13,13 @@
     <div class="grid-container">
       <h1 class="page-title">Биохимические показатели</h1>
 
-      <form action="/grid" method="GET" class="search-card" id="search-form">
-        <div class="search-title">Количество вещества в крови</div>
-        <div class="search-subtitle">(значение в произвольных единицах измерения)</div>
-        
-        <input type="number" name="bloodSubstanceConcentration" class="form-input" placeholder="Например: 35" style="margin-bottom: 0;" value="{{searchedConcentrationValue}}">
+      <form action="/indicatorGrid" method="GET" class="search-card" id="search-form">
+        <div class="search-title">Количество вещества в крови, ед.</div>
+        <div class="range-wrapper">
+          <span class="range-labels">0</span>
+          <input type="range" name="indicatorConcentration" class="form-range" min="0" max="5000" step="1" value="{{searchedConcentration}}">
+          <span class="range-labels">5000</span>
+        </div>
       </form>
 
       <button type="submit" form="search-form" class="btn-purple btn-full" style="margin-bottom: 27px;">Поиск</button>
@@ -25,11 +27,11 @@
       <div class="indicators-grid">
         {{#each biochemicalIndicators}}
         <div class="indicator-card">
-          <div class="card-image" style="background-image: url('{{this.indicatorImageUrl}}');"></div>
+          <div class="card-image" style="background-image: url('{{this.imageUrl}}');"></div>
           
           <div class="card-body">
             <h3 class="card-title">{{this.indicatorTitle}}</h3>
-            <span class="card-range"><span class="card-indicator">{{this.indicatorName}}: </span>{{this.lowerReferenceLimit}}-{{this.upperReferenceLimit}} {{this.measurementUnit}}</span>
+            <span class="card-range"><span class="card-indicator">Показания: </span>{{this.lowerReferenceLimit}}-{{this.upperReferenceLimit}} ед.</span>
             
             <div class="card-footer">
               <button type="button" 
@@ -39,7 +41,7 @@
                 <span class="card-likes">{{this.likesCount}}</span>
               </button>
               
-              <a href="/feed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
+              <a href="/indicatorFeed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
             </div>
           </div>
         </div>
@@ -47,7 +49,7 @@
       </div>
     </div>
 
-    {{> bottom_nav}}
+    {{> navigation}}
   </div>
 </body>
 </html>

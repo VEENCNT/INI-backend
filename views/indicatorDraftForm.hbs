@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>МедСити — Черновик биохимического показателя</title>
+  <title>МедСити</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -13,25 +13,27 @@
     <div class="form-container">
       <h1 class="page-title">Черновик</h1>
 
-      <form action="/add" method="POST" enctype="multipart/form-data" class="draft-form">
+      <form action="/indicatorDraftForm" method="POST" enctype="multipart/form-data" class="draft-form">
         <div class="form-section">
           <h2 class="section-title">Медиа</h2>
           
           <label class="field-label">Изображение</label>
+          <input type="file" id="image-input" name="image" accept="image/*" hidden required>
           <div class="image-upload-box">
-            <label for="image-input" class="btn-purple">
-              Загрузить &darr;
-            </label>
-            <input type="file" id="image-input" name="image" accept="image/*" hidden>
+            <span class="upload-placeholder">Изображение не загружено</span>
           </div>
+          <label for="image-input" class="btn-purple btn-full">
+            Загрузить &darr;
+          </label>
 
           <label class="field-label">Видео</label>
+          <input type="file" id="video-input" name="video" accept="video/*" hidden required>
           <div class="video-upload-box">
-            <label for="video-input" class="btn-purple btn-full">
-              Загрузить &darr;
-            </label>
-            <input type="file" id="video-input" name="video" accept="video/*" hidden>
+            <span class="upload-placeholder">Видео не загружено</span>
           </div>
+          <label for="video-input" class="btn-purple btn-full">
+            Загрузить &darr;
+          </label>
         </div>
 
         <div class="form-section">
@@ -50,31 +52,21 @@
 
         <div class="form-section">
           <h2 class="section-title">Поля по теме</h2>
-          
-          <div class="input-group">
-            <label class="field-label">Название вещества</label>
-            <input type="text" name="name" class="form-input" placeholder="Например: Альбумин">
-          </div>
 
           <div class="input-group">
-            <label class="field-label">Единицы измерения</label>
-            <input type="text" name="unit" class="form-input" placeholder="Например: г/л">
-          </div>
-
-          <div class="input-group">
-            <label class="field-label">Нижняя граница содержания в крови</label>
+            <label class="field-label">Нижняя граница содержания в крови, eд.</label>
             <input type="number" name="lowerLimit" class="form-input" placeholder="Например: 50">
           </div>
 
           <div class="input-group">
-            <label class="field-label">Верхняя граница содержания в крови</label>
+            <label class="field-label">Верхняя граница содержания в крови, ед.</label>
             <input type="number" name="upperLimit" class="form-input" placeholder="Например: 65">
           </div>
         </div>
       </form>
     </div>
 
-    {{> bottom_nav}}
+    {{> navigation}}
   </div>
 </body>
 </html>

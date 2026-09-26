@@ -88,7 +88,7 @@ header {
   color: #4E2B8C;
 }
 
-/* Bottom Navigation */
+/* Navigation */
 
 .bottom-nav {
   position: relative;
@@ -162,7 +162,7 @@ header {
   box-shadow: 0 4px 10px rgba(78, 43, 140, 0.3); 
 }
 
-/* Feed */
+/* Indicator Feed */
 
 .feed-container {
   flex: 1;
@@ -209,12 +209,35 @@ header {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-.info-range {
-  font-size: 16px;
+.expand-toggle-checkbox {
+  display: none;
+}
+
+.expand-btn {
+  display: block;
+  text-align: right;
+  color: #ffffff; 
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 5px;
+  font-size: 14px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
-  margin-bottom: 28px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.expand-btn::before {
+  content: "Еще";
+}
+
+.expand-toggle-checkbox:checked ~ .info-desc {
+  -webkit-line-clamp: unset;
+  display: block; 
+  overflow: visible;
+}
+
+.expand-toggle-checkbox:checked ~ .expand-btn::before {
+  content: "Свернуть";
 }
 
 .info-desc {
@@ -222,6 +245,13 @@ header {
   font-weight: 600;
   line-height: 1.3;
   color: rgba(255, 255, 255, 0.95);
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
@@ -234,6 +264,7 @@ header {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  width: 48px;
 }
 .action-item {
   display: flex;
@@ -256,19 +287,25 @@ header {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.action-btn-text {
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .action-btn:active {
   transform: scale(0.94);
 }
 
-.likes-count {
+.action-text {
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
   margin-top: 6px;
+  white-space: nowrap;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-/* Add */
+/* Indicator Draft Form */
 
 .form-container {
   flex: 1;
@@ -289,7 +326,6 @@ header {
   font-size: 20px;
   font-weight: 700;
   margin-top: 27px;
-  margin-bottom: 10px;
 }
 
 .field-label {
@@ -297,6 +333,7 @@ header {
   font-size: 16px;
   font-weight: 700;
   color: #222222;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -335,19 +372,54 @@ header {
 
 .image-upload-box {
   width: 100%;
-  height: 312px;
+  height: 260px;
   border: 1.5px solid #E8E2F4;
   border-radius: 14px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 10px; 
   background-color: #ffffff;
 }
 
+.video-upload-box {
+  width: 100%;
+  height: 380px;
+  border: 1.5px solid #E8E2F4;
+  border-radius: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px; 
+  background-color: #ffffff;
+}
+
+.upload-placeholder {
+  color: #A899C5;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#image-input:valid ~ .image-upload-box .upload-placeholder,
+#video-input:valid ~ .video-upload-box .upload-placeholder {
+  display: none;
+}
+
+#image-input:valid ~ .image-upload-box {
+  background-image: url("/images/placeholder.png");
+  background-size: cover;
+  background-position: center;
+}
+
+#video-input:valid ~ .video-upload-box {
+  background-image: url("/images/placeholder.png");
+  background-size: cover;
+  background-position: center;
+}
+
 .btn-purple {
-  border: none; /* Убирает стандартную рамку браузера */
-  outline: none; /* Убирает контур при клике/фокусе */
+  border: none; 
+  outline: none;
 
   background-color: #533293;
   color: #ffffff;
@@ -374,11 +446,7 @@ header {
   box-sizing: border-box;
 }
 
-.video-upload-box {
-  margin-bottom: 27px;
-}
-
-/* Grid */
+/* Indicator Grid */
 
 .grid-container {
   flex: 1;
@@ -387,7 +455,6 @@ header {
   background-color: #ffffff;
 }
 
-/* Карточка поиска */
 .search-card {
   border: 1.5px solid #E8E2F4;
   border-radius: 16px;
@@ -404,11 +471,67 @@ header {
   margin-bottom: 10px;
 }
 
-.search-subtitle {
-  color: #5C438A;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 10px;
+/* Контейнер с рамкой и закругленными углами */
+.range-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1.5px solid #E8E2F4;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-top: 12px;
+  background-color: #ffffff;
+}
+
+/* Подписи 0 и 10000 */
+.range-labels {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4E2B8C;
+}
+
+/* Полоса слайдера */
+.form-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: #E8E2F4;
+  border-radius: 2px;
+  outline: none;
+  margin: 0;
+}
+
+/* Ползунок (Chrome, Safari, Edge) */
+.form-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #A293C2;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.form-range::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+}
+
+/* Ползунок (Firefox) */
+.form-range::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #A293C2;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s ease;
+}
+
+.form-range::-moz-range-thumb:active {
+  transform: scale(1.2);
 }
 
 .search-card {
@@ -417,14 +540,12 @@ header {
   margin-bottom: 12px;
 }
 
-/* Двухколоночная сетка */
 .indicators-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
-/* Карточки показателей */
 .indicator-card {
   border: 1.5px solid #E8E2F4;
   border-radius: 16px;
@@ -460,18 +581,17 @@ header {
 .card-indicator {
   font-size: 10px;
   font-weight: 600;
-  color: #000000; /* Фиолетовый цвет текста диапазона */
+  color: #000000; 
   margin-bottom: 12px;
 }
 
 .card-range {
   font-size: 10px;
   font-weight: 600;
-  color: #533293; /* Фиолетовый цвет текста диапазона */
+  color: #533293;
   margin-bottom: 12px;
 }
 
-/* Нижняя панель внутри карточки (лайки + кнопка) */
 .card-footer {
   display: flex;
   align-items: center;
@@ -488,15 +608,15 @@ header {
   color: #222222;
 }
 
-/* Капсула лайков с рамкой */
 .likes-pill {
   display: inline-flex;
   align-items: center;
+  height: 30px;
   gap: 3px;
   padding: 5px 5px;
   border-radius: 8px;
-  border: 1.5px solid #111827; /* Чёрная обводка по умолчанию */
-  background: transparent; /* Сброс белого фона кнопки */
+  border: 1.5px solid #111827; 
+  background: transparent;
   color: #000000;
   font-size: 12px;
   font-weight: 700;
@@ -505,16 +625,14 @@ header {
 }
 
 .likes-pill:active {
-  transform: scale(0.92); /* Эффект нажатия */
+  transform: scale(0.92);
 }
 
-/* Активная фиолетовая капсула лайка */
 .likes-pill.is-liked {
   border-color: #533293;
   color: #533293;
 }
 
-/* Кнопка "Подробнее" в виде капсулы */
 .btn-outline {
   border: 1.5px solid #533293;
   color: #ffffff;
@@ -528,7 +646,6 @@ header {
 }
 
 .btn-outline:active {
-  color: #533293;
-  background-color: #ffffff;
-  transform: scale(0.95);
+  transform: scale(0.97);
+  background-color: #422578;
 }

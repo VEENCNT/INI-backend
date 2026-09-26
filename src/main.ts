@@ -15,6 +15,6 @@ async function bootstrap() {
 
   hbs.registerPartials(join(import.meta.dirname, '..', 'views', 'partials'));
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();

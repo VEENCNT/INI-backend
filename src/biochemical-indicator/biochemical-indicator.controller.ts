@@ -8,19 +8,19 @@ export class BiochemicalIndicatorController {
   ) {}
 
   @Get()
-  @Render('feed')
-  getFeedRoot(
+  @Render('indicatorFeed')
+  getIndicatorFeedRoot(
     @Query('indicatorId') indicatorId?: string,
-    @Query('switchToNextIndicator') switchToNextIndicator?: string,
+    @Query('next') next?: string,
   ) {
     return this.biochemicalIndicatorService.getIndicatorFeedData(
       indicatorId,
-      switchToNextIndicator
+      next
     );
   }
 
-  @Get('feed')
-  @Render('feed')
+  @Get('indicatorFeed')
+  @Render('indicatorFeed')
   getIndicatorFeed(
     @Query('indicatorId') indicatorId?: string,
     @Query('next') next?: string,
@@ -31,19 +31,19 @@ export class BiochemicalIndicatorController {
     );
   }
 
-  @Get('grid')
-  @Render('grid')
+  @Get('indicatorGrid')
+  @Render('indicatorGrid')
   getIndicatorsGrid(
-    @Query('bloodSubstanceConcentration') bloodSubstanceConcentration?: string,
+    @Query('indicatorConcentration') indicatorConcentration?: string,
   ) {
-    return this.biochemicalIndicatorService.getIndicatorsGridData(
-      bloodSubstanceConcentration
+    return this.biochemicalIndicatorService.getIndicatorGridData(
+      indicatorConcentration
     );
   }
 
-  @Get('add')
-  @Render('add')
-  getDraftIndicatorForm() {
+  @Get('indicatorDraftForm')
+  @Render('indicatorDraftForm')
+  getIndicatorDraftForm() {
     return {};
   }
 }

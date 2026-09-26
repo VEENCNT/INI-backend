@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>МедСити</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="mobile-container">
+    {{> header}}
+
+    <div class="feed-container">
+      <video class="feed-video" autoplay loop muted playsinline>
+        <source src="{{biochemicalIndicator.videoUrl}}" type="video/mp4">
+      </video>
+
+      <div class="overlay"></div>
+
+      <div class="info-box">
+        <input type="checkbox" id="expand-toggle" class="expand-toggle-checkbox">
+        <h2 class="info-title">{{biochemicalIndicator.indicatorTitle}}</h2>
+        <p class="info-desc">{{biochemicalIndicator.indicatorDescription}}</p>
+        <label for="expand-toggle" class="expand-btn"></label>
+      </div>
+
+      <div class="actions">
+        <div class="action-item">
+          <div class="action-btn">
+            <span class="action-btn-text">Макс.</span>
+          </div>
+          <span class="action-text">{{biochemicalIndicator.upperReferenceLimit}} ед.</span>
+        </div>
+
+        <div class="action-item">
+          <div class="action-btn">
+            <span class="action-btn-text">Мин.</span>
+          </div>
+          <span class="action-text">{{biochemicalIndicator.lowerReferenceLimit}} ед.</span>
+        </div>
+
+        <div class="action-item">
+          <button class="action-btn">
+            <img src="/images/heart.svg" alt="Сердце">
+          </button>
+          <span class="action-text">{{biochemicalIndicator.likesCount}}</span>
+        </div>
+
+        <a href="/indicatorFeed?indicatorId={{biochemicalIndicator.indicatorId}}&next=true" class="action-btn">
+          <img src="/images/next.svg" alt="Следующий">
+        </a>
+      </div>
+    </div>
+
+    {{> navigation}}
+  </div>
+</body>
+</html>
