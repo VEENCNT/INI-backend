@@ -16,8 +16,8 @@
 | `indicator_id` | `INT` | `PK`, `AUTO_INCREMENT` | Уникальный идентификатор показателя |
 | `title` | `VARCHAR(100)` | `UNIQUE`, `NOT NULL` | Название показателя |
 | `description` | `TEXT` | `NULLABLE` | Полное описание |
-| `lower_reference_limit` | `NUMERIC(10,2)` | `NULLABLE` | Нижняя граница нормы |
-| `upper_reference_limit` | `NUMERIC(10,2)` | `NULLABLE` | Верхняя граница нормы |
+| `lower_reference_limit` | `NUMERIC(10,2)` | `NOT NULL` | Нижняя граница нормы |
+| `upper_reference_limit` | `NUMERIC(10,2)` | `NOT NULL` | Верхняя граница нормы |
 | `image_url` | `VARCHAR(255)` | `NOT NULL` | Ссылка на изображение в MinIO |
 | `video_url` | `VARCHAR(255)` | `NOT NULL` | Ссылка на короткое видео в MinIO |
 | `status` | `VARCHAR(20)` | `NOT NULL` | Статус записи (`CREATED`, `FORMED`, `DELETED`) |
@@ -44,11 +44,11 @@
 | **1** | `GET` | `/api/biochemical-indicators` | Query: `indicatorConcentration` | `200 OK` | Список опубликованных услуг с фильтрацией по концентрации и признаком `isOwner`.|
 | **2** | `POST` | `/api/biochemical-indicators/draft` | `multipart/form-data`: `title`, `description`, `lowerReferenceLimit`, `upperReferenceLimit`, `image`, `video` | `201 Created` | Создание или обновление черновика. Загружает файлы в MinIO и генерирует ссылки.|
 | **3** | `GET` | `/api/biochemical-indicators/draft` | — | `200 OK` | Получение черновика текущего пользователя. Возвращает объект услуги или дефолтную структуру со значениями `null`/`""`.|
-| **4** | `PUT` | `/api/biochemical-indicators/draft/publish` | Path: `id` | `200 OK` | Публикация черновика (перевод из статуса `CREATED` в `FORMED` и фиксирование `formedAt`).|
+| **4** | `PUT` | `/api/biochemical-indicators/draft/publish` | — | `200 OK` | Публикация черновика (перевод из статуса `CREATED` в `FORMED` и фиксирование `formedAt`).|
 | **5** | `GET` | `/api/biochemical-indicators/feed` | — | `200 OK` | Получение первого элемента ленты публикаций.|
 | **6** | `GET` | `/api/biochemical-indicators/feed` | Query: `indicatorId`, `next=true` | `200 OK` | Пагинация ленты: получение следующего опубликованного элемента относительно `indicatorId`.|
-| **7** | `POST` | `/api/biochemical-indicators/:id/like` | Body: `{ "like": 1 }` или `{ "like": 0 }` | `201 Created` | Установка (`1`) или снятие (`0`) лайка текущим пользователем.|
+| **7** | `POST` | `/api/biochemical-indicators/:id/like` | Path: `id` и Body: `{ "like": 1 }` или `{ "like": 0 }` | `201 Created` | Установка (`1`) или снятие (`0`) лайка текущим пользователем.|
 | **8** | `DELETE` | `/api/biochemical-indicators/:id` | Path: `id` | `200 OK` | Мягкое удаление (Soft Delete). Доступно только создателю услуги.|
 | **9** | `POST` | `/api/users/register` | Body: `{ "username", "login", "passwordHash" }` | `201 Created` | Регистрация нового пользователя.|
-| **10** | `POST` | `/api/auth/login` | Body: `{ "login" }` | `201 Created` | Аутентификация (заглушка).|
+| **10** | `POST` | `/api/auth/login` | — | `201 Created` | Аутентификация (заглушка).|
 | **11** | `POST` | `/api/auth/logout` | — | `201 Created` | Деавторизация (заглушка).|
