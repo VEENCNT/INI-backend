@@ -22,10 +22,10 @@ export class BiochemicalIndicator {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'lower_reference_limit', type: 'numeric', precision: 10, scale: 2, nullable: true  })
+  @Column({ name: 'lower_reference_limit', type: 'numeric', precision: 10, scale: 2  })
   lowerReferenceLimit: number;
 
-  @Column({ name: 'upper_reference_limit', type: 'numeric', precision: 10, scale: 2, nullable: true  })
+  @Column({ name: 'upper_reference_limit', type: 'numeric', precision: 10, scale: 2  })
   upperReferenceLimit: number;
 
   @Column({ name: 'image_url', type: 'varchar', length: 255})

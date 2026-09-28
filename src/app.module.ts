@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BiochemicalIndicatorModule } from './biochemical-indicator/biochemical-indicator.module.js';
+import { MinioModule } from './minio/minio.module.js';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { BiochemicalIndicatorModule } from './biochemical-indicator/biochemical-
         synchronize: false,
       }),
     }),
-    BiochemicalIndicatorModule
+    MinioModule,
+    BiochemicalIndicatorModule,
   ],
 })
 export class AppModule {}

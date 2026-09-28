@@ -1,11 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-
+import { 
+  Injectable, 
+  NotFoundException, 
+  BadRequestException, 
+  ForbiddenException 
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository, Not } from 'typeorm';
 
 import { User } from './entities/user.entity.js';
 import { BiochemicalIndicator } from './entities/biochemical-indicator.entity.js';
 import { Like } from './entities/like.entity.js';
+import { getCurrentUserId } from '../common/user-singleton.js';
+
+import { formatIndicatorResponse } from './dto/indicator-response.dto.js';
 
 @Injectable()
 export class BiochemicalIndicatorService {
@@ -20,72 +27,15 @@ export class BiochemicalIndicatorService {
     private readonly likeRepository: Repository<Like>,
   ) {}
 
-  async getIndicatorFeedData(indicatorIdQuery?: string, next?: string) {
-    const currentId = indicatorIdQuery ? parseInt(indicatorIdQuery, 10) : 0;
-
-    let indicator;
-
-    if (next === 'true') {
-      indicator = await this.indicatorRepository.findOne({
-        where: {
-          status: 'FORMED',
-          indicatorId: MoreThan(currentId),
-        },
-        order: {
-          indicatorId: 'ASC',
-        },
-        relations: {
-          likes: true,
-        },
-      });
-
-      if (!indicator) {
-        indicator = await this.indicatorRepository.findOne({
-          where: { status: 'FORMED' },
-          order: { indicatorId: 'ASC' },
-          relations: { likes: true },
-        });
-      }
-    } 
-    else if (indicatorIdQuery) {
-      indicator = await this.indicatorRepository.findOne({
-        where: {
-          indicatorId: currentId,
-          status: 'FORMED',
-        },
-        relations: {
-          likes: true,
-        },
-      });
-    } 
-    else {
-      indicator = await this.indicatorRepository.findOne({
-        where: { status: 'FORMED' },
-        order: { indicatorId: 'ASC' },
-        relations: { likes: true },
-      });
-    }
-
-    if (!indicator) {
-      throw new NotFoundException('Показатель не найден');
-    }
-
-    return {
-      biochemicalIndicator: {
-        ...indicator,
-        likesCount: indicator.likes ? indicator.likes.length : 0,
-      },
-    };
-  }
-
-  async getIndicatorGridData(indicatorConcentration?: string) {
+  async getIndicatorsList(indicatorConcentration?: string) {
+    const currentUserId = getCurrentUserId();
     const searchedConcentration = indicatorConcentration
       ? parseFloat(indicatorConcentration)
       : undefined;
 
     const isConcentrationValid = searchedConcentration !== undefined && !isNaN(searchedConcentration);
 
-    const where = {
+    const where: any = {
       status: 'FORMED',
       ...(isConcentrationValid && {
         lowerReferenceLimit: LessThanOrEqual(searchedConcentration),
@@ -95,72 +45,175 @@ export class BiochemicalIndicatorService {
 
     const indicators = await this.indicatorRepository.find({
       where,
-      relations: {
-        likes: true
+      relations: { likes: true, creator: true },
+      order: { indicatorId: 'DESC' },
+    });
+
+    return indicators.map((item) => formatIndicatorResponse(item, currentUserId));
+  }
+
+  async getIndicatorFeed(indicatorIdQuery?: string, next?: string) {
+    const currentUserId = getCurrentUserId();
+    const currentId = indicatorIdQuery ? parseInt(indicatorIdQuery, 10) : 0;
+    let indicator: BiochemicalIndicator | null = null;
+
+    if (next === 'true') {
+      indicator = await this.indicatorRepository.findOne({
+        where: {
+          status: 'FORMED',
+          indicatorId: MoreThan(currentId),
+        },
+        order: { indicatorId: 'ASC' },
+        relations: { likes: true },
+      });
+
+      if (!indicator) {
+        indicator = await this.indicatorRepository.findOne({
+          where: { status: 'FORMED' },
+          order: { indicatorId: 'ASC' },
+          relations: { likes: true },
+        });
       }
-    });
-
-    return {
-      biochemicalIndicators: indicators.map((item) => ({
-        ...item,
-        likesCount: item.likes ? item.likes.length : 0,
-      })),
-      searchedConcentration: indicatorConcentration || '',
-    };
-  }
-
-  async findIndicatorDraftData(creatorId: number = 1) {
-    return await this.indicatorRepository.findOne({
-      where: {creatorId, status: "CREATED"}
-    });
-  }
-
-  async createIndicatorDraftData(data: {title: string, imageUrl?: string, videoUrl?: string, creatorId?: number}) {
-    let indicatorDraft = await this.findIndicatorDraftData();
-
-    if (indicatorDraft) {
-      indicatorDraft.title = data.title;
-      indicatorDraft.imageUrl = data.imageUrl ?? "";
-      indicatorDraft.videoUrl = data.videoUrl ?? "";
-    }
-    else {
-      indicatorDraft = this.indicatorRepository.create({
-        title: data.title,
-        imageUrl: data.imageUrl ?? "",
-        videoUrl: data.videoUrl ?? "",
-        lowerReferenceLimit: 0,
-        upperReferenceLimit: 0,
-        creatorId: data.creatorId ?? -1,
-        status: "CREATED"
+    } else if (indicatorIdQuery) {
+      indicator = await this.indicatorRepository.findOne({
+        where: {
+          indicatorId: currentId,
+          status: 'FORMED',
+        },
+        relations: { likes: true },
+      });
+    } else {
+      indicator = await this.indicatorRepository.findOne({
+        where: { status: 'FORMED' },
+        order: { indicatorId: 'ASC' },
+        relations: { likes: true },
       });
     }
 
-    return await this.indicatorRepository.save(indicatorDraft);
-  }
-
-  async formIndicatorDraftData(indicatorId: number, data: {title?: string, description?: string, lowerReferenceLimit?: number, upperReferenceLimit?: number}) {
-    const indicatorDraft = await this.indicatorRepository.findOne({where: {indicatorId, status: "CREATED"}});
-
-    if (!indicatorDraft) {
-      throw new NotFoundException("Черновик не найден!");
+    if (!indicator) {
+      throw new NotFoundException();
     }
 
-    indicatorDraft.title = data.title ?? indicatorDraft.title;
-    indicatorDraft.description = data.description ?? indicatorDraft.description;
-    indicatorDraft.lowerReferenceLimit = data.lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
-    indicatorDraft.upperReferenceLimit = data.upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
-    indicatorDraft.status = "FORMED";
-    indicatorDraft.formedAt = new Date();
-
-    return await this.indicatorRepository.save(indicatorDraft);
+    return formatIndicatorResponse(indicator, currentUserId);
   }
 
-  async deleteIndicatorData(indicatorId: string) {
-    await this.indicatorRepository.query(
-      `UPDATE biochemical_indicators
-       SET status = 'DELETED'
-       WHERE indicator_id = $1`,
-       [indicatorId]
-    )
+  async findIndicatorDraft() {
+    const currentUserId = getCurrentUserId();
+    const draft = await this.indicatorRepository.findOne({
+      where: { creatorId: currentUserId, status: 'CREATED' },
+      relations: {likes: true}
+    });
+
+    return formatIndicatorResponse(draft, currentUserId);;
+  }
+
+  async createIndicatorDraft(
+    title: string,
+    description: string,
+    lowerReferenceLimit: number,
+    upperReferenceLimit: number,
+    imageUrl: string,
+    videoUrl: string,
+  ) {
+    const currentUserId = getCurrentUserId();
+
+    let indicatorDraft = await this.indicatorRepository.findOne({
+      where: { creatorId: currentUserId, status: 'CREATED' },
+    });
+
+    if (indicatorDraft) {
+      indicatorDraft.title = title ?? indicatorDraft.title;
+      indicatorDraft.description = description ?? indicatorDraft.description;
+      indicatorDraft.lowerReferenceLimit = lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
+      indicatorDraft.upperReferenceLimit = upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
+      indicatorDraft.imageUrl = imageUrl ?? indicatorDraft.imageUrl;
+      indicatorDraft.videoUrl = videoUrl ?? indicatorDraft.videoUrl;
+    } else {
+      indicatorDraft = this.indicatorRepository.create({
+        title: title || '',
+        description: description || '',
+        imageUrl: imageUrl || '',
+        videoUrl: videoUrl || '',
+        lowerReferenceLimit: lowerReferenceLimit || 0,
+        upperReferenceLimit: upperReferenceLimit || 0,
+        creatorId: currentUserId,
+        status: 'CREATED',
+      });
+    }
+
+    const saved = await this.indicatorRepository.save(indicatorDraft);
+    return formatIndicatorResponse(saved, currentUserId);
+  }
+
+  async publishIndicator() {
+    const currentUserId = getCurrentUserId();
+    const indicator = await this.indicatorRepository.findOne({
+      where: { creatorId: currentUserId, status: 'CREATED' },
+    });
+
+    if (!indicator) {
+      throw new NotFoundException();
+    }
+
+    indicator.status = 'FORMED';
+    indicator.formedAt = new Date();
+
+    const saved = await this.indicatorRepository.save(indicator);
+    return formatIndicatorResponse(saved, currentUserId);
+  }
+
+  async deleteIndicator(indicatorId: number) {
+    const currentUserId = getCurrentUserId();
+    const indicator = await this.indicatorRepository.findOne({
+      where: { indicatorId },
+    });
+
+    if (!indicator || indicator.status === 'DELETED') {
+      throw new NotFoundException();
+    }
+
+    if (indicator.creatorId !== currentUserId) {
+      throw new ForbiddenException();
+    }
+
+    indicator.status = 'DELETED';
+
+    const saved = await this.indicatorRepository.save(indicator);
+    return formatIndicatorResponse(saved, currentUserId);
+  }
+
+  async likeIndicator(indicatorId: number, isLike: number) {
+    const userId = getCurrentUserId();
+
+    const indicator = await this.indicatorRepository.findOne({
+      where: { indicatorId, status: 'FORMED' },
+      relations: { likes: true }
+    });
+
+    if (!indicator) {
+      throw new NotFoundException();
+    }
+
+    const existingLike = await this.likeRepository.findOne({
+      where: { userId, indicatorId },
+    });
+
+    if (isLike === 1) {
+      if (!existingLike) {
+        const newLike = this.likeRepository.create({ userId, indicatorId });
+        await this.likeRepository.save(newLike);
+      }
+    } else {
+      if (existingLike) {
+        await this.likeRepository.remove(existingLike);
+      }
+    }
+
+    const updatedIndicator = await this.indicatorRepository.findOne({
+      where: { indicatorId },
+      relations: { likes: true },
+    });
+
+    return formatIndicatorResponse(updatedIndicator, userId);
   }
 }
