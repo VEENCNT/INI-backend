@@ -13,23 +13,32 @@
     <div class="form-container">
       <h1 class="page-title">Черновик</h1>
 
-      <form action="/indicatorDraftForm" method="POST" enctype="multipart/form-data" class="draft-form">
+      <form action="{{#if isDraftCreated}}/indicatorDraft/form{{else}}/indicatorDraft/next{{/if}}" 
+            method="POST" 
+            class="draft-form">
+          
+        {{#if isDraftCreated}}
+          <input type="hidden" name="indicatorId" value="{{indicatorId}}">
+        {{/if}}
+          
         <div class="form-section">
           <h2 class="section-title">Медиа</h2>
           
           <label class="field-label">Изображение</label>
-          <input type="file" id="image-input" name="image" accept="image/*" hidden required>
+          <input type="file" id="image-input" name="image" accept="image/*" hidden>
           <div class="image-upload-box">
             <span class="upload-placeholder">Изображение не загружено</span>
+            <img class="image-preview" src="/images/placeholder.png" alt="Изображение не загружено">
           </div>
           <label for="image-input" class="btn-purple btn-full">
             Загрузить &darr;
           </label>
 
           <label class="field-label">Видео</label>
-          <input type="file" id="video-input" name="video" accept="video/*" hidden required>
+          <input type="file" id="video-input" name="video" accept="video/*" hidden>
           <div class="video-upload-box">
             <span class="upload-placeholder">Видео не загружено</span>
+            <video class="video-preview" src="/videos/placeholder.mp4" autoplay loop muted playsinline></video>
           </div>
           <label for="video-input" class="btn-purple btn-full">
             Загрузить &darr;
@@ -41,28 +50,36 @@
           
           <div class="input-group">
             <label class="field-label">Название</label>
-            <input type="text" name="title" class="form-input" placeholder="Например: Крайне низкий Альбумин">
+            <input type="text" name="title" class="form-input" placeholder="Например: Крайне низкий Альбумин" value="{{title}}" required>
           </div>
 
-          <div class="input-group">
-            <label class="field-label">Описание</label>
-            <textarea name="description" class="form-textarea" placeholder="Например: Серьезный дефицит основного белка крови..."></textarea>
-          </div>
+          {{#if isDraftCreated}}
+            <div class="input-group">
+              <label class="field-label">Описание</label>
+              <textarea name="description" class="form-textarea" placeholder="Например: Серьезный дефицит основного белка крови...">{{description}}</textarea>
+            </div>
+          {{/if}}
         </div>
 
+        {{#if isDraftCreated}}
         <div class="form-section">
           <h2 class="section-title">Поля по теме</h2>
 
           <div class="input-group">
             <label class="field-label">Нижняя граница содержания в крови, eд.</label>
-            <input type="number" name="lowerLimit" class="form-input" placeholder="Например: 50">
+            <input type="number" name="lowerReferenceLimit" class="form-input" placeholder="Например: 50" required>
           </div>
 
           <div class="input-group">
             <label class="field-label">Верхняя граница содержания в крови, ед.</label>
-            <input type="number" name="upperLimit" class="form-input" placeholder="Например: 65">
+            <input type="number" name="upperReferenceLimit" class="form-input" placeholder="Например: 65" required>
           </div>
         </div>
+        {{/if}}
+
+        <button type="submit" class="btn-purple btn-full">
+          {{#if isDraftCreated}}Отправить{{else}}Далее{{/if}}
+        </button>
       </form>
     </div>
 

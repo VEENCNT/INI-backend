@@ -1,0 +1,1 @@
+ALTER TABLE likes RENAME COLUMN id TO like_id;

@@ -1,110 +1,166 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-const MINIO_BASE_URL = 'http://localhost:9000/media';
+import { InjectRepository } from '@nestjs/typeorm';
+import { LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
 
-export interface BiochemicalIndicator {
-  indicatorId: number;
-  indicatorTitle: string;
-  indicatorDescription: string;
-  lowerReferenceLimit: number;
-  upperReferenceLimit: number;
-  imageUrl: string;
-  videoUrl: string;
-  patientLikeUserIds: number[];
-}
+import { User } from './entities/user.entity.js';
+import { BiochemicalIndicator } from './entities/biochemical-indicator.entity.js';
+import { Like } from './entities/like.entity.js';
 
 @Injectable()
 export class BiochemicalIndicatorService {
-  private readonly biochemicalIndicators: BiochemicalIndicator[] = [
-    {
-      indicatorId: 1,
-      indicatorTitle: 'Крайне низкий Альбумин',
-      indicatorDescription: 'Серьезный дефицит основного белка крови.',
-      lowerReferenceLimit: 0,
-      upperReferenceLimit: 25,
-      imageUrl: `${MINIO_BASE_URL}/albumin.png`,
-      videoUrl: `${MINIO_BASE_URL}/albumin.mp4`,
-      patientLikeUserIds: [1, 2, 3, 4, 5, 6, 7],
-    },
-    {
-      indicatorId: 2,
-      indicatorTitle: 'Низкое число Лимфоцитов',
-      indicatorDescription: 'Снижение уровня лимфоцитов, указывающее на иммунодефицит и нутритивный риск.',
-      lowerReferenceLimit: 800,
-      upperReferenceLimit: 1200,
-      imageUrl: `${MINIO_BASE_URL}/lymphocytes.png`,
-      videoUrl: `${MINIO_BASE_URL}/lymphocytes.mp4`,
-      patientLikeUserIds: [8, 9, 10, 11],
-    },
-    {
-      indicatorId: 3,
-      indicatorTitle: 'Нормальный Альбумин',
-      indicatorDescription: 'Оптимальный уровень сывороточного альбумина.',
-      lowerReferenceLimit: 35,
-      upperReferenceLimit: 50,
-      imageUrl: `${MINIO_BASE_URL}/albumin.png`,
-      videoUrl: `${MINIO_BASE_URL}/albumin.mp4`,
-      patientLikeUserIds: [12, 13, 14, 15, 16],
-    },
-    {
-      indicatorId: 4,
-      indicatorTitle: 'Нормальный Холестерин',
-      indicatorDescription: 'Уровень общего холестерина в норме для расчета INI.',
-      lowerReferenceLimit: 4.5,
-      upperReferenceLimit: 5.2,
-      imageUrl: `${MINIO_BASE_URL}/cholesterol.png`,
-      videoUrl: `${MINIO_BASE_URL}/cholesterol.mp4`,
-      patientLikeUserIds: [17, 18, 19],
-    },
-  ];
+  constructor(
+    @InjectRepository(BiochemicalIndicator)
+    private readonly indicatorRepository: Repository<BiochemicalIndicator>,
 
-  getIndicatorFeedData(indicatorIdQuery?: string, next?: string) {
-    let indicatorId = 0;
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
 
-    if (indicatorIdQuery) {
-      const parsedId = parseInt(indicatorIdQuery, 10);
-      const foundId = this.biochemicalIndicators.findIndex(
-        (item) => item.indicatorId === parsedId,
-      );
-      if (foundId !== -1) {
-        indicatorId = foundId;
-      }
-    }
+    @InjectRepository(Like)
+    private readonly likeRepository: Repository<Like>,
+  ) {}
+
+  async getIndicatorFeedData(indicatorIdQuery?: string, next?: string) {
+    const currentId = indicatorIdQuery ? parseInt(indicatorIdQuery, 10) : 0;
+
+    let indicator;
 
     if (next === 'true') {
-      indicatorId = (indicatorId + 1) % this.biochemicalIndicators.length;
+      indicator = await this.indicatorRepository.findOne({
+        where: {
+          status: 'FORMED',
+          indicatorId: MoreThan(currentId),
+        },
+        order: {
+          indicatorId: 'ASC',
+        },
+        relations: {
+          likes: true,
+        },
+      });
+
+      if (!indicator) {
+        indicator = await this.indicatorRepository.findOne({
+          where: { status: 'FORMED' },
+          order: { indicatorId: 'ASC' },
+          relations: { likes: true },
+        });
+      }
+    } 
+    else if (indicatorIdQuery) {
+      indicator = await this.indicatorRepository.findOne({
+        where: {
+          indicatorId: currentId,
+          status: 'FORMED',
+        },
+        relations: {
+          likes: true,
+        },
+      });
+    } 
+    else {
+      indicator = await this.indicatorRepository.findOne({
+        where: { status: 'FORMED' },
+        order: { indicatorId: 'ASC' },
+        relations: { likes: true },
+      });
     }
 
-    const currentIndicator = this.biochemicalIndicators[indicatorId];
+    if (!indicator) {
+      throw new NotFoundException('Показатель не найден');
+    }
 
     return {
       biochemicalIndicator: {
-        ...currentIndicator,
-        likesCount: currentIndicator.patientLikeUserIds.length,
-      }
+        ...indicator,
+        likesCount: indicator.likes ? indicator.likes.length : 0,
+      },
     };
   }
 
-  getIndicatorGridData(indicatorConcentration?: string) {
-    let filteredIndicators = this.biochemicalIndicators;
+  async getIndicatorGridData(indicatorConcentration?: string) {
     const searchedConcentration = indicatorConcentration
       ? parseFloat(indicatorConcentration)
       : undefined;
 
-    if (searchedConcentration !== undefined && !isNaN(searchedConcentration)) {
-      filteredIndicators = filteredIndicators.filter(
-        (item) =>
-          searchedConcentration >= item.lowerReferenceLimit &&
-          searchedConcentration <= item.upperReferenceLimit,
-      );
-    }
+    const isConcentrationValid = searchedConcentration !== undefined && !isNaN(searchedConcentration);
+
+    const where = {
+      status: 'FORMED',
+      ...(isConcentrationValid && {
+        lowerReferenceLimit: LessThanOrEqual(searchedConcentration),
+        upperReferenceLimit: MoreThanOrEqual(searchedConcentration),
+      }),
+    };
+
+    const indicators = await this.indicatorRepository.find({
+      where,
+      relations: {
+        likes: true
+      }
+    });
 
     return {
-      biochemicalIndicators: filteredIndicators.map((item) => ({
+      biochemicalIndicators: indicators.map((item) => ({
         ...item,
-        likesCount: item.patientLikeUserIds.length,
+        likesCount: item.likes ? item.likes.length : 0,
       })),
-      searchedConcentration: indicatorConcentration || ''
+      searchedConcentration: indicatorConcentration || '',
     };
+  }
+
+  async findIndicatorDraftData(creatorId: number = 1) {
+    return await this.indicatorRepository.findOne({
+      where: {creatorId, status: "CREATED"}
+    });
+  }
+
+  async createIndicatorDraftData(data: {title: string, imageUrl?: string, videoUrl?: string, creatorId?: number}) {
+    let indicatorDraft = await this.findIndicatorDraftData();
+
+    if (indicatorDraft) {
+      indicatorDraft.title = data.title;
+      indicatorDraft.imageUrl = data.imageUrl ?? "";
+      indicatorDraft.videoUrl = data.videoUrl ?? "";
+    }
+    else {
+      indicatorDraft = this.indicatorRepository.create({
+        title: data.title,
+        imageUrl: data.imageUrl ?? "",
+        videoUrl: data.videoUrl ?? "",
+        lowerReferenceLimit: 0,
+        upperReferenceLimit: 0,
+        creatorId: data.creatorId ?? -1,
+        status: "CREATED"
+      });
+    }
+
+    return await this.indicatorRepository.save(indicatorDraft);
+  }
+
+  async formIndicatorDraftData(indicatorId: number, data: {title?: string, description?: string, lowerReferenceLimit?: number, upperReferenceLimit?: number}) {
+    const indicatorDraft = await this.indicatorRepository.findOne({where: {indicatorId, status: "CREATED"}});
+
+    if (!indicatorDraft) {
+      throw new NotFoundException("Черновик не найден!");
+    }
+
+    indicatorDraft.title = data.title ?? indicatorDraft.title;
+    indicatorDraft.description = data.description ?? indicatorDraft.description;
+    indicatorDraft.lowerReferenceLimit = data.lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
+    indicatorDraft.upperReferenceLimit = data.upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
+    indicatorDraft.status = "FORMED";
+    indicatorDraft.formedAt = new Date();
+
+    return await this.indicatorRepository.save(indicatorDraft);
+  }
+
+  async deleteIndicatorData(indicatorId: string) {
+    await this.indicatorRepository.query(
+      `UPDATE biochemical_indicators
+       SET status = 'DELETED'
+       WHERE indicator_id = $1`,
+       [indicatorId]
+    )
   }
 }

@@ -19,8 +19,8 @@
 
       <div class="info-box">
         <input type="checkbox" id="expand-toggle" class="expand-toggle-checkbox">
-        <h2 class="info-title">{{biochemicalIndicator.indicatorTitle}}</h2>
-        <p class="info-desc">{{biochemicalIndicator.indicatorDescription}}</p>
+        <h2 class="info-title">{{biochemicalIndicator.title}}</h2>
+        <p class="info-desc">{{biochemicalIndicator.description}}</p>
         <label for="expand-toggle" class="expand-btn"></label>
       </div>
 
@@ -29,14 +29,14 @@
           <div class="action-btn">
             <span class="action-btn-text">Макс.</span>
           </div>
-          <span class="action-text">{{biochemicalIndicator.upperReferenceLimit}} ед.</span>
+          <span class="action-text">{{formatNumber biochemicalIndicator.upperReferenceLimit}} ед.</span>
         </div>
 
         <div class="action-item">
           <div class="action-btn">
             <span class="action-btn-text">Мин.</span>
           </div>
-          <span class="action-text">{{biochemicalIndicator.lowerReferenceLimit}} ед.</span>
+          <span class="action-text">{{formatNumber biochemicalIndicator.lowerReferenceLimit}} ед.</span>
         </div>
 
         <div class="action-item">

@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { BiochemicalIndicatorModule } from './biochemical-indicator/biochemical-indicator.module.js';
+import { AppModule } from './app.module.js';
 
 import { join } from 'path';
 
 import hbs from 'hbs';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(BiochemicalIndicatorModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useStaticAssets(join(import.meta.dirname, '..', 'public'));
   app.setBaseViewsDir(join(import.meta.dirname, '..', 'views'));
@@ -15,6 +15,13 @@ async function bootstrap() {
 
   hbs.registerPartials(join(import.meta.dirname, '..', 'views', 'partials'));
 
+  hbs.registerHelper('formatNumber', (value: any) => {
+    if (value === null || value === undefined) return '';
+    const num = Number(value);
+    return isNaN(num) ? value : num;
+  });
+
   await app.listen(process.env.PORT ?? 4000);
 }
+
 bootstrap();

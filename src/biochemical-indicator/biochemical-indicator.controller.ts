@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Render } from '@nestjs/common';
+import { Controller, Get, Post, Query, Render, Redirect, Body } from '@nestjs/common';
 import { BiochemicalIndicatorService } from './biochemical-indicator.service.js';
 
 @Controller()
@@ -9,11 +9,11 @@ export class BiochemicalIndicatorController {
 
   @Get()
   @Render('indicatorFeed')
-  getIndicatorFeedRoot(
+  async getIndicatorFeedRoot(
     @Query('indicatorId') indicatorId?: string,
     @Query('next') next?: string,
   ) {
-    return this.biochemicalIndicatorService.getIndicatorFeedData(
+    return await this.biochemicalIndicatorService.getIndicatorFeedData(
       indicatorId,
       next
     );
@@ -21,11 +21,11 @@ export class BiochemicalIndicatorController {
 
   @Get('indicatorFeed')
   @Render('indicatorFeed')
-  getIndicatorFeed(
+  async getIndicatorFeed(
     @Query('indicatorId') indicatorId?: string,
     @Query('next') next?: string,
   ) {
-    return this.biochemicalIndicatorService.getIndicatorFeedData(
+    return await this.biochemicalIndicatorService.getIndicatorFeedData(
       indicatorId,
       next
     );
@@ -33,17 +33,62 @@ export class BiochemicalIndicatorController {
 
   @Get('indicatorGrid')
   @Render('indicatorGrid')
-  getIndicatorsGrid(
+  async getIndicatorsGrid(
     @Query('indicatorConcentration') indicatorConcentration?: string,
   ) {
-    return this.biochemicalIndicatorService.getIndicatorGridData(
+    return await this.biochemicalIndicatorService.getIndicatorGridData(
       indicatorConcentration
     );
   }
 
-  @Get('indicatorDraftForm')
-  @Render('indicatorDraftForm')
-  getIndicatorDraftForm() {
-    return {};
+  @Get('indicatorDraft')
+  @Render('indicatorDraft')
+  async getIndicatorDraft() {
+    const creatorId = 1;
+
+    const indicatorDraft = await this.biochemicalIndicatorService.findIndicatorDraftData(creatorId);
+
+    return {
+      isDraftCreated: !!indicatorDraft,
+      ...indicatorDraft
+    };
+  }
+
+  @Post('indicatorDraft/next')
+  @Redirect('/indicatorDraft', 302)
+  async createIndicatorDraft(
+    @Body('title') title: string
+  ) {
+    const creatorId = 1;
+
+    await this.biochemicalIndicatorService.createIndicatorDraftData({
+      title,
+      creatorId
+    });
+  }
+
+  @Post('indicatorDraft/form')
+  @Redirect('/indicatorDraft', 302)
+  async formIndicatorDraft(
+    @Body('indicatorId') indicatorId: string,
+    @Body('title') title: string,
+    @Body('description') description: string,
+    @Body('lowerReferenceLimit') lowerReferenceLimit: string,
+    @Body('upperReferenceLimit') upperReferenceLimit: string,
+  ) {
+    await this.biochemicalIndicatorService.formIndicatorDraftData(Number(indicatorId), {
+      title,
+      description,
+      lowerReferenceLimit: Number(lowerReferenceLimit),
+      upperReferenceLimit: Number(upperReferenceLimit),
+    });
+  }
+
+  @Post('indicatorGrid/delete')
+  @Redirect('/indicatorGrid', 302)
+  async deleteIndicator(
+    @Query('indicatorId') indicatorId: string,
+  ) {
+    await this.biochemicalIndicatorService.deleteIndicatorData(indicatorId);
   }
 }

@@ -30,18 +30,25 @@
           <div class="card-image" style="background-image: url('{{this.imageUrl}}');"></div>
           
           <div class="card-body">
-            <h3 class="card-title">{{this.indicatorTitle}}</h3>
-            <span class="card-range"><span class="card-indicator">Показания: </span>{{this.lowerReferenceLimit}}-{{this.upperReferenceLimit}} ед.</span>
+            <h3 class="card-title">{{this.title}}</h3>
+            <span class="card-range"><span class="card-indicator">Показания: </span>{{formatNumber this.lowerReferenceLimit}}-{{formatNumber this.upperReferenceLimit}} ед.</span>
             
             <div class="card-footer">
-              <button type="button" 
-                      class="likes-pill {{#if this.isLiked}}is-liked{{/if}}" 
-                      data-indicator-id="{{this.indicatorId}}">
-                <img src="/images/heart.svg" alt="Сердце">
-                <span class="card-likes">{{this.likesCount}}</span>
-              </button>
-              
-              <a href="/indicatorFeed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
+              <div class="card-footer-row">
+                <button type="button" 
+                        class="likes-pill {{#if this.isLiked}}is-liked{{/if}}" 
+                        data-indicator-id="{{this.indicatorId}}">
+                  <img src="/images/heart.svg" alt="Сердце">
+                  <span class="card-likes">{{this.likesCount}}</span>
+                </button>
+                
+                <a href="/indicatorFeed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
+              </div>
+              <div class="card-footer-row">
+                <form action="/indicatorGrid/delete?indicatorId={{this.indicatorId}}" method="POST" class="delete-form">
+                  <button type="submit" class="btn-outline btn-full">Удалить</button>
+                </form>
+              </div>
             </div>
           </div>
         </div>

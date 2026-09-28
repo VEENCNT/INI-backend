@@ -307,7 +307,7 @@ header {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-/* Indicator Draft Form */
+/* Indicator Draft */
 
 .form-container {
   flex: 1;
@@ -396,27 +396,42 @@ header {
   background-color: #ffffff;
 }
 
+.video-preview {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.image-preview {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
 .upload-placeholder {
   color: #A899C5;
   font-size: 16px;
   font-weight: 500;
 }
 
-#image-input:valid ~ .image-upload-box .upload-placeholder,
 #video-input:valid ~ .video-upload-box .upload-placeholder {
   display: none;
 }
 
-#image-input:valid ~ .image-upload-box {
-  background-image: url("/images/placeholder.png");
-  background-size: cover;
-  background-position: center;
+#video-input:valid ~ .video-upload-box .video-preview {
+  display: block;
 }
 
-#video-input:valid ~ .video-upload-box {
-  background-image: url("/images/placeholder.png");
-  background-size: cover;
-  background-position: center;
+#image-input:valid ~ .image-upload-box .upload-placeholder{
+  display: none;
+}
+
+#image-input:valid ~ .image-upload-box .image-preview{
+  display: block;
 }
 
 .btn-purple {
@@ -596,9 +611,15 @@ header {
 
 .card-footer {
   display: flex;
+  flex-direction: column;
+  margin-top: auto;
+  gap: 10px;
+}
+
+.card-footer-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: auto;
 }
 
 .card-likes {
@@ -644,10 +665,15 @@ header {
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
+  cursor:pointer;
   transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .btn-outline:active {
   transform: scale(0.97);
   background-color: #422578;
+}
+
+.delete-form {
+  width: 100%;
 }
