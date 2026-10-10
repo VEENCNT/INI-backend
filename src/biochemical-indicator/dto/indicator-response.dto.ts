@@ -39,6 +39,7 @@ export function formatIndicatorResponse(
     createdAt: indicator.createdAt ?? null,
     formedAt: indicator.formedAt ?? null,
     isOwner: indicator.creatorId === currentUserId ? 1 : 0,
-    likesCount: indicator.likes ? indicator.likes.length : 0,
+    isLiked: indicator.likes.some((like) => like.userId === currentUserId) ? 1 : 0,
+    likesCount: indicator.likes ? indicator.likes.length : 0
   };
 }
