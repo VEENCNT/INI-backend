@@ -109,9 +109,6 @@ export class BiochemicalIndicatorService {
 
   async createIndicatorDraft(
     title: string,
-    description: string,
-    lowerReferenceLimit: number,
-    upperReferenceLimit: number,
     imageUrl: string,
     videoUrl: string,
   ) {
@@ -123,19 +120,16 @@ export class BiochemicalIndicatorService {
 
     if (indicatorDraft) {
       indicatorDraft.title = title ?? indicatorDraft.title;
-      indicatorDraft.description = description ?? indicatorDraft.description;
-      indicatorDraft.lowerReferenceLimit = lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
-      indicatorDraft.upperReferenceLimit = upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
       indicatorDraft.imageUrl = imageUrl ?? indicatorDraft.imageUrl;
       indicatorDraft.videoUrl = videoUrl ?? indicatorDraft.videoUrl;
     } else {
       indicatorDraft = this.indicatorRepository.create({
         title: title || '',
-        description: description || '',
+        description: '',
         imageUrl: imageUrl || '',
         videoUrl: videoUrl || '',
-        lowerReferenceLimit: lowerReferenceLimit || 0,
-        upperReferenceLimit: upperReferenceLimit || 0,
+        lowerReferenceLimit: 0,
+        upperReferenceLimit: 0,
         creatorId: currentUserId,
         status: 'CREATED',
       });
@@ -145,20 +139,28 @@ export class BiochemicalIndicatorService {
     return formatIndicatorResponse(saved, currentUserId);
   }
 
-  async publishIndicator() {
+  async publishIndicator(
+    description: string,
+    lowerReferenceLimit: number,
+    upperReferenceLimit: number,
+  ) {
     const currentUserId = getCurrentUserId();
-    const indicator = await this.indicatorRepository.findOne({
+    const indicatorDraft = await this.indicatorRepository.findOne({
       where: { creatorId: currentUserId, status: 'CREATED' },
     });
 
-    if (!indicator) {
+    if (!indicatorDraft) {
       throw new NotFoundException();
     }
 
-    indicator.status = 'FORMED';
-    indicator.formedAt = new Date();
+    indicatorDraft.description = description ?? indicatorDraft.description;
+    indicatorDraft.lowerReferenceLimit = lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
+    indicatorDraft.upperReferenceLimit = upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
 
-    const saved = await this.indicatorRepository.save(indicator);
+    indicatorDraft.status = 'FORMED';
+    indicatorDraft.formedAt = new Date();
+
+    const saved = await this.indicatorRepository.save(indicatorDraft);
     return formatIndicatorResponse(saved, currentUserId);
   }
 
@@ -166,6 +168,7 @@ export class BiochemicalIndicatorService {
     const currentUserId = getCurrentUserId();
     const indicator = await this.indicatorRepository.findOne({
       where: { indicatorId },
+      relations: {likes: true}
     });
 
     if (!indicator || indicator.status === 'DELETED') {

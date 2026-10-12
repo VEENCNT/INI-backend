@@ -49,9 +49,6 @@ export class BiochemicalIndicatorController {
   )
   async createIndicatorDraft(
     @Body('title') title: string,
-    @Body('description') description: string,
-    @Body('lowerReferenceLimit') lowerReferenceLimit: string,
-    @Body('upperReferenceLimit') upperReferenceLimit: string,
     @UploadedFiles()
     files: {
       image?: Express.Multer.File[];
@@ -70,17 +67,22 @@ export class BiochemicalIndicatorController {
 
     return await this.biochemicalIndicatorService.createIndicatorDraft(
       title,
-      description,
-      lowerReferenceLimit ? Number(lowerReferenceLimit) : 0,
-      upperReferenceLimit ? Number(upperReferenceLimit) : 0,
       imageUrl,
       videoUrl,
     );
   }
 
   @Put('/draft/publish')
-  async publishIndicator() {
-    return await this.biochemicalIndicatorService.publishIndicator();
+  async publishIndicator(
+    @Body('description') description: string,
+    @Body('lowerReferenceLimit') lowerReferenceLimit: string,
+    @Body('upperReferenceLimit') upperReferenceLimit: string,
+  ) {
+    return await this.biochemicalIndicatorService.publishIndicator(
+      description,
+      lowerReferenceLimit ? Number(lowerReferenceLimit) : 0,
+      upperReferenceLimit ? Number(upperReferenceLimit) : 0,
+    );
   }
 
   @Delete(':id')

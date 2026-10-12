@@ -7,9 +7,6 @@ export class User {
   @PrimaryGeneratedColumn({ name: 'user_id' })
   userId: number;
 
-  @Column({ type: 'varchar', length: 50 })
-  username: string;
-
   @Column({ type: 'varchar', length: 50, unique: true })
   login: string;
 

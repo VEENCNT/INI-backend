@@ -11,16 +11,19 @@ export class AuthController {
   ) {}
 
   @Post('auth/register')
-  async registerUser(@Body() body: { username: string; login: string; passwordHash: string }) {
+  async registerUser(
+    @Body('login') login: string,
+    @Body('passwordHash') passwordHash: string
+  ) {
     const newUser = this.userRepository.create({
-      username: body.username,
-      login: body.login,
-      passwordHash: body.passwordHash || 'default_password', 
+      login,
+      passwordHash: passwordHash ?? 'default_password', 
     });
+
     const savedUser = await this.userRepository.save(newUser);
+    
     return {
       userId: savedUser.userId,
-      username: savedUser.username,
       login: savedUser.login
     };
   }
