@@ -74,7 +74,7 @@ export class BiochemicalIndicatorController {
     );
   }
 
-  @Post('biochemicalIndicatorGrid/delete/:id')
+  @Delete('biochemicalIndicatorGrid/delete/:id')
   @Redirect('/biochemicalIndicatorGrid', 302)
   async deleteBiochemicalIndicator(
     @Param('id') indicatorId: string

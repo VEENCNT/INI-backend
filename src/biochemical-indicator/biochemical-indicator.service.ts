@@ -143,18 +143,30 @@ export class BiochemicalIndicatorService {
     return await this.biochemicalIndicatorRepository.save(biochemicalIndicatorDraft);
   }
 
-  async formBiochemicalIndicatorDraft(description: string, lowerReferenceLimit: number, upperReferenceLimit: number) {
+  async formBiochemicalIndicatorDraft(
+    description: string, 
+    lowerReferenceLimit: number, 
+    upperReferenceLimit: number
+  ) {
     const currentUserId = 1;
 
-    const biochemicalIndicatorDraft = await this.biochemicalIndicatorRepository.findOne({where: {creatorId: currentUserId, status: "CREATED"}});
+    const biochemicalIndicatorDraft = await this.biochemicalIndicatorRepository.findOne({
+      where: {creatorId: currentUserId, status: "CREATED"}
+    });
 
     if (!biochemicalIndicatorDraft) {
       throw new NotFoundException("Черновик не найден!");
     }
 
-    biochemicalIndicatorDraft.description = description ?? biochemicalIndicatorDraft.description;
-    biochemicalIndicatorDraft.lowerReferenceLimit = lowerReferenceLimit ?? biochemicalIndicatorDraft.lowerReferenceLimit;
-    biochemicalIndicatorDraft.upperReferenceLimit = upperReferenceLimit ?? biochemicalIndicatorDraft.upperReferenceLimit;
+    biochemicalIndicatorDraft.description = 
+      description ?? biochemicalIndicatorDraft.description;
+    
+    biochemicalIndicatorDraft.lowerReferenceLimit = 
+      lowerReferenceLimit ?? biochemicalIndicatorDraft.lowerReferenceLimit;
+    
+    biochemicalIndicatorDraft.upperReferenceLimit = 
+      upperReferenceLimit ?? biochemicalIndicatorDraft.upperReferenceLimit;
+    
     biochemicalIndicatorDraft.status = "FORMED";
     biochemicalIndicatorDraft.formedAt = new Date();
 
