@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Render, Redirect, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Render, Redirect, Body, Param, Delete } from '@nestjs/common';
 import { BiochemicalIndicatorService } from './biochemical-indicator.service.js';
 
 @Controller()
@@ -8,45 +8,43 @@ export class BiochemicalIndicatorController {
   ) {}
 
   @Get()
-  @Render('indicatorFeed')
-  async getIndicatorFeedRoot(
+  @Render('biochemicalIndicatorFeed')
+  async getBiochemicalIndicatorFeedRoot(
     @Query('indicatorId') indicatorId?: string,
     @Query('next') next?: string,
   ) {
-    return await this.biochemicalIndicatorService.getIndicatorFeedData(
+    return await this.biochemicalIndicatorService.getBiochemicalIndicatorFeed(
       indicatorId,
       next
     );
   }
 
-  @Get('indicatorFeed')
-  @Render('indicatorFeed')
-  async getIndicatorFeed(
+  @Get('biochemicalIndicatorFeed')
+  @Render('biochemicalIndicatorFeed')
+  async getBiochemicalIndicatorFeed(
     @Query('indicatorId') indicatorId?: string,
     @Query('next') next?: string,
   ) {
-    return await this.biochemicalIndicatorService.getIndicatorFeedData(
+    return await this.biochemicalIndicatorService.getBiochemicalIndicatorFeed(
       indicatorId,
       next
     );
   }
 
-  @Get('indicatorGrid')
-  @Render('indicatorGrid')
-  async getIndicatorsGrid(
+  @Get('biochemicalIndicatorGrid')
+  @Render('biochemicalIndicatorGrid')
+  async getBiochemicalIndicatorsGrid(
     @Query('indicatorConcentration') indicatorConcentration?: string,
   ) {
-    return await this.biochemicalIndicatorService.getIndicatorGridData(
+    return await this.biochemicalIndicatorService.getBiochemicalIndicatorGrid(
       indicatorConcentration
     );
   }
 
-  @Get('indicatorDraft')
-  @Render('indicatorDraft')
-  async getIndicatorDraft() {
-    const creatorId = 1;
-
-    const indicatorDraft = await this.biochemicalIndicatorService.findIndicatorDraftData(creatorId);
+  @Get('biochemicalIndicatorDraft')
+  @Render('biochemicalIndicatorDraft')
+  async getBiochemicalIndicatorDraft() {
+    const indicatorDraft = await this.biochemicalIndicatorService.getBiochemicalIndicatorDraft();
 
     return {
       isDraftCreated: !!indicatorDraft,
@@ -54,41 +52,33 @@ export class BiochemicalIndicatorController {
     };
   }
 
-  @Post('indicatorDraft/next')
-  @Redirect('/indicatorDraft', 302)
-  async createIndicatorDraft(
+  @Post('biochemicalIndicatorDraft/next')
+  @Redirect('/biochemicalIndicatorDraft', 302)
+  async createBiochemicalIndicatorDraft(
     @Body('title') title: string
   ) {
-    const creatorId = 1;
-
-    await this.biochemicalIndicatorService.createIndicatorDraftData({
-      title,
-      creatorId
-    });
+    await this.biochemicalIndicatorService.createBiochemicalIndicatorDraft(title);
   }
 
-  @Post('indicatorDraft/form')
-  @Redirect('/indicatorDraft', 302)
-  async formIndicatorDraft(
-    @Body('indicatorId') indicatorId: string,
-    @Body('title') title: string,
+  @Post('biochemicalIndicatorDraft/form')
+  @Redirect('/biochemicalIndicatorDraft', 302)
+  async formBiochemicalIndicatorDraft(
     @Body('description') description: string,
     @Body('lowerReferenceLimit') lowerReferenceLimit: string,
     @Body('upperReferenceLimit') upperReferenceLimit: string,
   ) {
-    await this.biochemicalIndicatorService.formIndicatorDraftData(Number(indicatorId), {
-      title,
+    await this.biochemicalIndicatorService.formBiochemicalIndicatorDraft(
       description,
-      lowerReferenceLimit: Number(lowerReferenceLimit),
-      upperReferenceLimit: Number(upperReferenceLimit),
-    });
+      Number(lowerReferenceLimit),
+      Number(upperReferenceLimit),
+    );
   }
 
-  @Post('indicatorGrid/delete')
-  @Redirect('/indicatorGrid', 302)
-  async deleteIndicator(
-    @Query('indicatorId') indicatorId: string,
+  @Post('biochemicalIndicatorGrid/delete/:id')
+  @Redirect('/biochemicalIndicatorGrid', 302)
+  async deleteBiochemicalIndicator(
+    @Param('id') indicatorId: string
   ) {
-    await this.biochemicalIndicatorService.deleteIndicatorData(indicatorId);
+    await this.biochemicalIndicatorService.deleteBiochemicalIndicator(indicatorId);
   }
 }

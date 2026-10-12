@@ -11,7 +11,7 @@ import { Like } from './entities/like.entity.js';
 export class BiochemicalIndicatorService {
   constructor(
     @InjectRepository(BiochemicalIndicator)
-    private readonly indicatorRepository: Repository<BiochemicalIndicator>,
+    private readonly biochemicalIndicatorRepository: Repository<BiochemicalIndicator>,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -20,13 +20,13 @@ export class BiochemicalIndicatorService {
     private readonly likeRepository: Repository<Like>,
   ) {}
 
-  async getIndicatorFeedData(indicatorIdQuery?: string, next?: string) {
-    const currentId = indicatorIdQuery ? parseInt(indicatorIdQuery, 10) : 0;
+  async getBiochemicalIndicatorFeed(indicatorId?: string, next?: string) {
+    const currentId = indicatorId ? parseInt(indicatorId, 10) : 0;
 
-    let indicator;
+    let biochemicalIndicator;
 
     if (next === 'true') {
-      indicator = await this.indicatorRepository.findOne({
+      biochemicalIndicator = await this.biochemicalIndicatorRepository.findOne({
         where: {
           status: 'FORMED',
           indicatorId: MoreThan(currentId),
@@ -39,16 +39,16 @@ export class BiochemicalIndicatorService {
         },
       });
 
-      if (!indicator) {
-        indicator = await this.indicatorRepository.findOne({
+      if (!biochemicalIndicator) {
+        biochemicalIndicator = await this.biochemicalIndicatorRepository.findOne({
           where: { status: 'FORMED' },
           order: { indicatorId: 'ASC' },
           relations: { likes: true },
         });
       }
     } 
-    else if (indicatorIdQuery) {
-      indicator = await this.indicatorRepository.findOne({
+    else if (indicatorId) {
+      biochemicalIndicator = await this.biochemicalIndicatorRepository.findOne({
         where: {
           indicatorId: currentId,
           status: 'FORMED',
@@ -59,26 +59,26 @@ export class BiochemicalIndicatorService {
       });
     } 
     else {
-      indicator = await this.indicatorRepository.findOne({
+      biochemicalIndicator = await this.biochemicalIndicatorRepository.findOne({
         where: { status: 'FORMED' },
         order: { indicatorId: 'ASC' },
         relations: { likes: true },
       });
     }
 
-    if (!indicator) {
+    if (!biochemicalIndicator) {
       throw new NotFoundException('Показатель не найден');
     }
 
     return {
       biochemicalIndicator: {
-        ...indicator,
-        likesCount: indicator.likes ? indicator.likes.length : 0,
+        ...biochemicalIndicator,
+        likesCount: biochemicalIndicator.likes ? biochemicalIndicator.likes.length : 0,
       },
     };
   }
 
-  async getIndicatorGridData(indicatorConcentration?: string) {
+  async getBiochemicalIndicatorGrid(indicatorConcentration?: string) {
     const searchedConcentration = indicatorConcentration
       ? parseFloat(indicatorConcentration)
       : undefined;
@@ -93,7 +93,7 @@ export class BiochemicalIndicatorService {
       }),
     };
 
-    const indicators = await this.indicatorRepository.find({
+    const biochemicalIndicators = await this.biochemicalIndicatorRepository.find({
       where,
       relations: {
         likes: true
@@ -101,7 +101,7 @@ export class BiochemicalIndicatorService {
     });
 
     return {
-      biochemicalIndicators: indicators.map((item) => ({
+      biochemicalIndicators: biochemicalIndicators.map((item) => ({
         ...item,
         likesCount: item.likes ? item.likes.length : 0,
       })),
@@ -109,54 +109,60 @@ export class BiochemicalIndicatorService {
     };
   }
 
-  async findIndicatorDraftData(creatorId: number = 1) {
-    return await this.indicatorRepository.findOne({
-      where: {creatorId, status: "CREATED"}
+  async getBiochemicalIndicatorDraft() {
+    const currentUserId = 1;
+
+    return await this.biochemicalIndicatorRepository.findOne({
+      where: {creatorId: currentUserId, status: "CREATED"}
     });
   }
 
-  async createIndicatorDraftData(data: {title: string, imageUrl?: string, videoUrl?: string, creatorId?: number}) {
-    let indicatorDraft = await this.findIndicatorDraftData();
+  async createBiochemicalIndicatorDraft(title: string, imageUrl?: string, videoUrl?: string) {
+    const currentUserId = 1;
 
-    if (indicatorDraft) {
-      indicatorDraft.title = data.title;
-      indicatorDraft.imageUrl = data.imageUrl ?? "";
-      indicatorDraft.videoUrl = data.videoUrl ?? "";
+    let biochemicalIndicatorDraft = await this.getBiochemicalIndicatorDraft();
+
+    if (biochemicalIndicatorDraft) {
+      biochemicalIndicatorDraft.title = title;
+      biochemicalIndicatorDraft.imageUrl = imageUrl ?? "";
+      biochemicalIndicatorDraft.videoUrl = videoUrl ?? "";
     }
     else {
-      indicatorDraft = this.indicatorRepository.create({
-        title: data.title,
-        imageUrl: data.imageUrl ?? "",
-        videoUrl: data.videoUrl ?? "",
+      biochemicalIndicatorDraft = this.biochemicalIndicatorRepository.create({
+        title: title,
+        description: "",
+        imageUrl: imageUrl ?? "",
+        videoUrl: videoUrl ?? "",
         lowerReferenceLimit: 0,
         upperReferenceLimit: 0,
-        creatorId: data.creatorId ?? -1,
+        creatorId: currentUserId,
         status: "CREATED"
       });
     }
 
-    return await this.indicatorRepository.save(indicatorDraft);
+    return await this.biochemicalIndicatorRepository.save(biochemicalIndicatorDraft);
   }
 
-  async formIndicatorDraftData(indicatorId: number, data: {title?: string, description?: string, lowerReferenceLimit?: number, upperReferenceLimit?: number}) {
-    const indicatorDraft = await this.indicatorRepository.findOne({where: {indicatorId, status: "CREATED"}});
+  async formBiochemicalIndicatorDraft(description: string, lowerReferenceLimit: number, upperReferenceLimit: number) {
+    const currentUserId = 1;
 
-    if (!indicatorDraft) {
+    const biochemicalIndicatorDraft = await this.biochemicalIndicatorRepository.findOne({where: {creatorId: currentUserId, status: "CREATED"}});
+
+    if (!biochemicalIndicatorDraft) {
       throw new NotFoundException("Черновик не найден!");
     }
 
-    indicatorDraft.title = data.title ?? indicatorDraft.title;
-    indicatorDraft.description = data.description ?? indicatorDraft.description;
-    indicatorDraft.lowerReferenceLimit = data.lowerReferenceLimit ?? indicatorDraft.lowerReferenceLimit;
-    indicatorDraft.upperReferenceLimit = data.upperReferenceLimit ?? indicatorDraft.upperReferenceLimit;
-    indicatorDraft.status = "FORMED";
-    indicatorDraft.formedAt = new Date();
+    biochemicalIndicatorDraft.description = description ?? biochemicalIndicatorDraft.description;
+    biochemicalIndicatorDraft.lowerReferenceLimit = lowerReferenceLimit ?? biochemicalIndicatorDraft.lowerReferenceLimit;
+    biochemicalIndicatorDraft.upperReferenceLimit = upperReferenceLimit ?? biochemicalIndicatorDraft.upperReferenceLimit;
+    biochemicalIndicatorDraft.status = "FORMED";
+    biochemicalIndicatorDraft.formedAt = new Date();
 
-    return await this.indicatorRepository.save(indicatorDraft);
+    return await this.biochemicalIndicatorRepository.save(biochemicalIndicatorDraft);
   }
 
-  async deleteIndicatorData(indicatorId: string) {
-    await this.indicatorRepository.query(
+  async deleteBiochemicalIndicator(indicatorId: string) {
+    await this.biochemicalIndicatorRepository.query(
       `UPDATE biochemical_indicators
        SET status = 'DELETED'
        WHERE indicator_id = $1`,

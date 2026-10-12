@@ -13,7 +13,7 @@
     <div class="grid-container">
       <h1 class="page-title">Биохимические показатели</h1>
 
-      <form action="/indicatorGrid" method="GET" class="search-card" id="search-form">
+      <form action="/biochemicalIndicatorGrid" method="GET" class="search-card" id="search-form">
         <div class="search-title">Количество вещества в крови, ед.</div>
         <div class="range-wrapper">
           <span class="range-labels">0</span>
@@ -42,10 +42,10 @@
                   <span class="card-likes">{{this.likesCount}}</span>
                 </button>
                 
-                <a href="/indicatorFeed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
+                <a href="/biochemicalIndicatorFeed?indicatorId={{this.indicatorId}}" class="btn-outline">Подробнее</a>
               </div>
               <div class="card-footer-row">
-                <form action="/indicatorGrid/delete?indicatorId={{this.indicatorId}}" method="POST" class="delete-form">
+                <form action="/biochemicalIndicatorGrid/delete/{{this.indicatorId}}" method="POST" class="delete-form">
                   <button type="submit" class="btn-outline btn-full">Удалить</button>
                 </form>
               </div>
