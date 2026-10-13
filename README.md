@@ -1,11 +1,10 @@
-# Лабораторная работа №2
+# Лабораторная работа №4
 
 ### 1. Таблица `users` (Пользователи)
 
 | Поле | Тип | Ограничения | Описание |
 | --- | --- | --- | --- |
 | `user_id` | `INT` | `PK`, `AUTO_INCREMENT` | Уникальный идентификатор пользователя |
-| `username` | `VARCHAR(50)` | `NOT NULL` | Отображаемое имя |
 | `login` | `VARCHAR(50)` | `UNIQUE`, `NOT NULL` | Уникальный логин |
 | `password_hash` | `VARCHAR(255)` | `NOT NULL` | Хэш пароля |
 
@@ -14,7 +13,7 @@
 | Поле | Тип | Ограничения | Описание |
 | --- | --- | --- | --- |
 | `indicator_id` | `INT` | `PK`, `AUTO_INCREMENT` | Уникальный идентификатор показателя |
-| `title` | `VARCHAR(100)` | `UNIQUE`, `NOT NULL` | Название показателя |
+| `title` | `VARCHAR(100)` |  `NOT NULL` | Название показателя |
 | `description` | `TEXT` | `NULLABLE` | Полное описание |
 | `lower_reference_limit` | `NUMERIC(10,2)` | `NOT NULL` | Нижняя граница нормы |
 | `upper_reference_limit` | `NUMERIC(10,2)` | `NOT NULL` | Верхняя граница нормы |
