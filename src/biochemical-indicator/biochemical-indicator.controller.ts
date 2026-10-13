@@ -9,12 +9,24 @@ import {
   Body,
   UseInterceptors,
   UploadedFiles,
-  ParseIntPipe,
+  ParseIntPipe
 } from '@nestjs/common';
+
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+
+import { ApiTags, ApiOperation, ApiConsumes, ApiOkResponse, ApiBody } from '@nestjs/swagger';
+
 import { BiochemicalIndicatorService } from './biochemical-indicator.service.js';
 import { MinioService } from '../minio/minio.service.js';
 
+import { Authenticated  } from '../auth/auth.decorator.js';
+import { CurrentUser } from '../auth/current-user.decorator.js';
+
+import { BiochemicalIndicatorResponseDto } from './dto/biochemical-indicator-response.dto.js';
+import { CreateBiochemicalIndicatorDraftDto, PublishBiochemicalIndicatorDto, LikeBiochemicalIndicatorDto } from './dto/biochemical-indicator-input.dto.js';
+import { BiochemicalIndicatorListQueryDto, BiochemicalIndicatorFeedQueryDto } from './dto/biochemical-indicator-query.dto.js'
+
+@ApiTags('Biochemical Indicators')
 @Controller('api/biochemical-indicators')
 export class BiochemicalIndicatorController {
   constructor(
@@ -23,49 +35,69 @@ export class BiochemicalIndicatorController {
   ) {}
 
   @Get()
-  async getIndicatorsList(@Query('indicatorConcentration') indicatorConcentration?: string) {
-    return await this.biochemicalIndicatorService.getIndicatorsList(indicatorConcentration);
+  @ApiOperation({ summary: 'Получить список показателей' })
+  @ApiOkResponse({ type: BiochemicalIndicatorResponseDto, isArray: true })
+  async getBiochemicalIndicatorsList(
+    @CurrentUser() userId: number | null,
+    @Query() query: BiochemicalIndicatorListQueryDto
+  ) {
+    return await this.biochemicalIndicatorService.getBiochemicalIndicatorsList(userId, query.indicatorConcentration);
   }
 
   @Get('feed')
-  async getIndicatorFeed(
-    @Query('indicatorId') indicatorId?: string,
-    @Query('next') next?: string,
+  @ApiOperation({ summary: 'Получить ленту показателей' })
+  @ApiOkResponse({ type: BiochemicalIndicatorResponseDto })
+  async getBiochemcialIndicatorFeed(
+    @CurrentUser() userId: number | null,
+    @Query() query: BiochemicalIndicatorFeedQueryDto
   ) {
-    return await this.biochemicalIndicatorService.getIndicatorFeed(indicatorId, next);
+    return await this.biochemicalIndicatorService.getBiochemicalIndicatorFeed(userId, query.indicatorId, query.next);
   }
 
   @Get('draft')
-  async getIndicatorDraft() {
-    return await this.biochemicalIndicatorService.findIndicatorDraft();
+  @Authenticated()
+  @ApiOperation({ summary: 'Получить черновик услуги' })
+  @ApiOkResponse({ type: BiochemicalIndicatorResponseDto })
+  async getBiochemicalIndicatorDraft(@CurrentUser() userId: number) {
+    return await this.biochemicalIndicatorService.findBiochemicalIndicatorDraft(userId);
   }
 
   @Post('draft')
+  @Authenticated()
+  @ApiOperation({ summary: 'Создать или обновить черновик услуги' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'image', maxCount: 1 },
       { name: 'video', maxCount: 1 },
     ]),
   )
-  async createIndicatorDraft(
-    @Body('title') title: string,
-    @UploadedFiles()
-    files: {
-      image?: Express.Multer.File[];
-      video?: Express.Multer.File[];
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', example: 'Лимфоциты' },
+        image: { type: 'string', format: 'binary' },
+        video: { type: 'string', format: 'binary' },
+      },
     },
+  })
+  async createBiochemicalIndicatorDraft(
+    @CurrentUser() userId: number,
+    @Body() body: CreateBiochemicalIndicatorDraftDto,
+    @UploadedFiles() files: { image?: Express.Multer.File[]; video?: Express.Multer.File[] }
   ) {
-    let imageUrl = '';
-    let videoUrl = '';
+    const title = body.title;
 
-    if (files?.image?.[0]) {
-      imageUrl = await this.minioService.uploadFile(files.image[0]);
-    }
-    if (files?.video?.[0]) {
-      videoUrl = await this.minioService.uploadFile(files.video[0]);
-    }
+    const imageUrl = files?.image?.[0]
+      ? await this.minioService.uploadFile(files.image[0])
+      : '';
+    const videoUrl = files?.video?.[0]
+      ? await this.minioService.uploadFile(files.video[0])
+      : '';
 
-    return await this.biochemicalIndicatorService.createIndicatorDraft(
+    return await this.biochemicalIndicatorService.createBiochemicalIndicatorDraft(
+      userId,
       title,
       imageUrl,
       videoUrl,
@@ -73,28 +105,38 @@ export class BiochemicalIndicatorController {
   }
 
   @Put('/draft/publish')
-  async publishIndicator(
-    @Body('description') description: string,
-    @Body('lowerReferenceLimit') lowerReferenceLimit: string,
-    @Body('upperReferenceLimit') upperReferenceLimit: string,
+  @Authenticated()
+  @ApiOperation({ summary: 'Опубликовать услугу' })
+  async publishBiochemicalIndicator(
+    @CurrentUser() userId: number,
+    @Body() body: PublishBiochemicalIndicatorDto
   ) {
-    return await this.biochemicalIndicatorService.publishIndicator(
-      description,
-      lowerReferenceLimit ? Number(lowerReferenceLimit) : 0,
-      upperReferenceLimit ? Number(upperReferenceLimit) : 0,
+    return await this.biochemicalIndicatorService.publishBiochemicalIndicator(
+      userId,
+      body.description,
+      body.lowerReferenceLimit,
+      body.upperReferenceLimit,
     );
   }
 
   @Delete(':id')
-  async deleteIndicator(@Param('id', ParseIntPipe) id: number) {
-    return await this.biochemicalIndicatorService.deleteIndicator(id);
+  @Authenticated()
+  @ApiOperation({ summary: 'Удалить услугу' })
+  async deleteBiochemicalIndicator(
+    @CurrentUser() userId: number,
+    @Param('id', ParseIntPipe) indicatorId: number
+  ) {
+    return await this.biochemicalIndicatorService.deleteBiochemicalIndicator(userId, indicatorId);
   }
 
   @Post(':id/like')
-  async likeIndicator(
+  @Authenticated()
+  @ApiOperation({ summary: 'Поставить/убрать лайк' })
+  async likeBiochemicalIndicator(
+    @CurrentUser() userId: number,
     @Param('id', ParseIntPipe) indicatorId: number,
-    @Body('like') like: number,
+    @Body() body: LikeBiochemicalIndicatorDto
   ) {
-    return await this.biochemicalIndicatorService.likeIndicator(indicatorId, Number(like));
+    return await this.biochemicalIndicatorService.likeBiochemicalIndicator(userId, indicatorId, body.like);
   }
 }

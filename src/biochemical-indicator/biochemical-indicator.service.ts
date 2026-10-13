@@ -10,9 +10,8 @@ import { LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository, Not } from 'typ
 import { User } from './entities/user.entity.js';
 import { BiochemicalIndicator } from './entities/biochemical-indicator.entity.js';
 import { Like } from './entities/like.entity.js';
-import { getCurrentUserId } from '../common/user-singleton.js';
 
-import { formatIndicatorResponse } from './dto/indicator-response.dto.js';
+import { formatBiochemicalIndicatorResponse } from './dto/biochemical-indicator-response.dto.js';
 
 @Injectable()
 export class BiochemicalIndicatorService {
@@ -27,8 +26,10 @@ export class BiochemicalIndicatorService {
     private readonly likeRepository: Repository<Like>,
   ) {}
 
-  async getIndicatorsList(indicatorConcentration?: string) {
-    const currentUserId = getCurrentUserId();
+  async getBiochemicalIndicatorsList(
+    userId: number | null,
+    indicatorConcentration?: string
+  ) {
     const searchedConcentration = indicatorConcentration
       ? parseFloat(indicatorConcentration)
       : undefined;
@@ -45,23 +46,26 @@ export class BiochemicalIndicatorService {
 
     const indicators = await this.indicatorRepository.find({
       where,
-      relations: { likes: true, creator: true },
+      relations: { likes: true },
       order: { indicatorId: 'DESC' },
     });
 
-    return indicators.map((item) => formatIndicatorResponse(item, currentUserId));
+    return indicators.map((item) => formatBiochemicalIndicatorResponse(item, userId));
   }
 
-  async getIndicatorFeed(indicatorIdQuery?: string, next?: string) {
-    const currentUserId = getCurrentUserId();
-    const currentId = indicatorIdQuery ? parseInt(indicatorIdQuery, 10) : 0;
+  async getBiochemicalIndicatorFeed(
+    userId: number | null,
+    indicatorId?: number, 
+    next?: string
+  ) {
+    const currentIndicatorId = indicatorId ?? 0;
     let indicator: BiochemicalIndicator | null = null;
 
     if (next === 'true') {
       indicator = await this.indicatorRepository.findOne({
         where: {
           status: 'FORMED',
-          indicatorId: MoreThan(currentId),
+          indicatorId: MoreThan(currentIndicatorId),
         },
         order: { indicatorId: 'ASC' },
         relations: { likes: true },
@@ -74,10 +78,10 @@ export class BiochemicalIndicatorService {
           relations: { likes: true },
         });
       }
-    } else if (indicatorIdQuery) {
+    } else if (indicatorId) {
       indicator = await this.indicatorRepository.findOne({
         where: {
-          indicatorId: currentId,
+          indicatorId: currentIndicatorId,
           status: 'FORMED',
         },
         relations: { likes: true },
@@ -94,28 +98,26 @@ export class BiochemicalIndicatorService {
       throw new NotFoundException();
     }
 
-    return formatIndicatorResponse(indicator, currentUserId);
+    return formatBiochemicalIndicatorResponse(indicator, userId);
   }
 
-  async findIndicatorDraft() {
-    const currentUserId = getCurrentUserId();
+  async findBiochemicalIndicatorDraft(userId: number) {
     const draft = await this.indicatorRepository.findOne({
-      where: { creatorId: currentUserId, status: 'CREATED' },
+      where: { creatorId: userId, status: 'CREATED' },
       relations: {likes: true}
     });
 
-    return formatIndicatorResponse(draft, currentUserId);;
+    return formatBiochemicalIndicatorResponse(draft, userId);;
   }
 
-  async createIndicatorDraft(
+  async createBiochemicalIndicatorDraft(
+    userId: number,
     title: string,
     imageUrl: string,
     videoUrl: string,
   ) {
-    const currentUserId = getCurrentUserId();
-
     let indicatorDraft = await this.indicatorRepository.findOne({
-      where: { creatorId: currentUserId, status: 'CREATED' },
+      where: { creatorId: userId, status: 'CREATED' },
     });
 
     if (indicatorDraft) {
@@ -130,23 +132,23 @@ export class BiochemicalIndicatorService {
         videoUrl: videoUrl || '',
         lowerReferenceLimit: 0,
         upperReferenceLimit: 0,
-        creatorId: currentUserId,
+        creatorId: userId,
         status: 'CREATED',
       });
     }
 
-    const saved = await this.indicatorRepository.save(indicatorDraft);
-    return formatIndicatorResponse(saved, currentUserId);
+    const savedIndicatorDraft = await this.indicatorRepository.save(indicatorDraft);
+    return formatBiochemicalIndicatorResponse(savedIndicatorDraft, userId);
   }
 
-  async publishIndicator(
+  async publishBiochemicalIndicator(
+    userId: number,
     description: string,
     lowerReferenceLimit: number,
     upperReferenceLimit: number,
   ) {
-    const currentUserId = getCurrentUserId();
     const indicatorDraft = await this.indicatorRepository.findOne({
-      where: { creatorId: currentUserId, status: 'CREATED' },
+      where: { creatorId: userId, status: 'CREATED' },
     });
 
     if (!indicatorDraft) {
@@ -160,12 +162,14 @@ export class BiochemicalIndicatorService {
     indicatorDraft.status = 'FORMED';
     indicatorDraft.formedAt = new Date();
 
-    const saved = await this.indicatorRepository.save(indicatorDraft);
-    return formatIndicatorResponse(saved, currentUserId);
+    const savedIndicatorDraft = await this.indicatorRepository.save(indicatorDraft);
+    return formatBiochemicalIndicatorResponse(savedIndicatorDraft, userId);
   }
 
-  async deleteIndicator(indicatorId: number) {
-    const currentUserId = getCurrentUserId();
+  async deleteBiochemicalIndicator(
+    userId: number,
+    indicatorId: number
+  ) {
     const indicator = await this.indicatorRepository.findOne({
       where: { indicatorId },
       relations: {likes: true}
@@ -175,19 +179,21 @@ export class BiochemicalIndicatorService {
       throw new NotFoundException();
     }
 
-    if (indicator.creatorId !== currentUserId) {
+    if (indicator.creatorId !== userId) {
       throw new ForbiddenException();
     }
 
     indicator.status = 'DELETED';
 
-    const saved = await this.indicatorRepository.save(indicator);
-    return formatIndicatorResponse(saved, currentUserId);
+    const savedIndicator = await this.indicatorRepository.save(indicator);
+    return formatBiochemicalIndicatorResponse(savedIndicator, userId);
   }
 
-  async likeIndicator(indicatorId: number, isLike: number) {
-    const userId = getCurrentUserId();
-
+  async likeBiochemicalIndicator(
+    userId: number,
+    indicatorId: number, 
+    isLike: number
+  ) {
     const indicator = await this.indicatorRepository.findOne({
       where: { indicatorId, status: 'FORMED' },
       relations: { likes: true }
@@ -217,6 +223,6 @@ export class BiochemicalIndicatorService {
       relations: { likes: true },
     });
 
-    return formatIndicatorResponse(updatedIndicator, userId);
+    return formatBiochemicalIndicatorResponse(updatedIndicator, userId);
   }
 }
