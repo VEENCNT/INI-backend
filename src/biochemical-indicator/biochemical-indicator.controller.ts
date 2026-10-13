@@ -56,7 +56,7 @@ export class BiochemicalIndicatorController {
 
   @Get('draft')
   @Authenticated()
-  @ApiOperation({ summary: 'Получить черновик услуги' })
+  @ApiOperation({ summary: 'Получить черновик показателя' })
   @ApiOkResponse({ type: BiochemicalIndicatorResponseDto })
   async getBiochemicalIndicatorDraft(@CurrentUser() userId: number) {
     return await this.biochemicalIndicatorService.findBiochemicalIndicatorDraft(userId);
@@ -64,7 +64,7 @@ export class BiochemicalIndicatorController {
 
   @Post('draft')
   @Authenticated()
-  @ApiOperation({ summary: 'Создать или обновить черновик услуги' })
+  @ApiOperation({ summary: 'Создать или обновить черновик показателя' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -106,7 +106,7 @@ export class BiochemicalIndicatorController {
 
   @Put('/draft/publish')
   @Authenticated()
-  @ApiOperation({ summary: 'Опубликовать услугу' })
+  @ApiOperation({ summary: 'Опубликовать показатель' })
   async publishBiochemicalIndicator(
     @CurrentUser() userId: number,
     @Body() body: PublishBiochemicalIndicatorDto
@@ -121,7 +121,7 @@ export class BiochemicalIndicatorController {
 
   @Delete(':id')
   @Authenticated()
-  @ApiOperation({ summary: 'Удалить услугу' })
+  @ApiOperation({ summary: 'Удалить показатель' })
   async deleteBiochemicalIndicator(
     @CurrentUser() userId: number,
     @Param('id', ParseIntPipe) indicatorId: number
